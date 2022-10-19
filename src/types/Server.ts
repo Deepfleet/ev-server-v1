@@ -424,7 +424,7 @@ export enum ServerAction {
   USER_IMAGE = 'UserImage',
   TAGS = 'Tags',
   TAG = 'Tag',
-  TAG_BY_VISUAL_ID= 'TagByVisualID',
+  TAG_BY_VISUAL_ID = 'TagByVisualID',
   USER_DEFAULT_TAG_CAR = 'UserDefaultTagCar',
   TAG_CREATE = 'TagCreate',
   TAG_UPDATE = 'TagUpdate',
@@ -493,7 +493,9 @@ export enum ServerAction {
   HTTP_RESPONSE = 'HttpResponse',
   HTTP_ERROR = 'HttpError',
 
-  EXPORT_TO_CSV = 'ExportToCSV'
+  EXPORT_TO_CSV = 'ExportToCSV',
+
+  WEBHOOKS = 'Webhooks',
 }
 
 // RESTful API

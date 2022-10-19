@@ -26,6 +26,7 @@ import TransactionRouter from './api/TransactionRouter';
 import UserRouter from './api/UserRouter';
 import UtilRouter from './util/UtilRouter';
 import express from 'express';
+import WebhookRouter from './api/WebhookRouter';
 
 export default class GlobalRouterV1 {
   private router: express.Router;
@@ -43,14 +44,16 @@ export default class GlobalRouterV1 {
   }
 
   protected buildRouteAuth(): void {
-    this.router.use('/auth',
+    this.router.use(
+      '/auth',
       CommonService.checkTenantValidity.bind(this),
       new AuthRouter().buildRoutes()
     );
   }
 
   protected buildRouteAPI(): void {
-    this.router.use('/api',
+    this.router.use(
+      '/api',
       AuthService.authenticate(),
       SessionHashService.checkUserAndTenantValidity.bind(this),
       [
@@ -75,13 +78,17 @@ export default class GlobalRouterV1 {
         new TenantRouter().buildRoutes(),
         new TransactionRouter().buildRoutes(),
         new UserRouter().buildRoutes(),
-      ]);
+        new WebhookRouter().buildRoutes(),
+      ]
+    );
   }
 
   protected buildRouteUtil(): void {
-    this.router.use('/util',
+    this.router.use(
+      '/util',
       CommonService.checkTenantValidity.bind(this),
-      new UtilRouter().buildRoutes());
+      new UtilRouter().buildRoutes()
+    );
   }
 
   protected buildRouteDocs(): void {

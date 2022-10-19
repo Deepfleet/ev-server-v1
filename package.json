@@ -152,6 +152,7 @@
     "stripe": "^9.9.0",
     "strong-soap": "^3.4.0",
     "swagger-ui-express": "^4.5.0",
+    "ts-dev": "^2.1.16",
     "tslib": "^2.4.0",
     "tz-lookup": "^6.1.25",
     "urlencode": "^1.1.0",
