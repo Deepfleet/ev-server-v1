@@ -11,6 +11,7 @@ export default class WebhookRouter {
   public buildRoutes(): express.Router {
     this.buildGetWebhookRoute();
     this.buildCreateWebhookRoute();
+    this.buildGetAllWebhookRoute();
     return this.router;
   }
   buildCreateWebhookRoute() {
@@ -28,6 +29,17 @@ export default class WebhookRouter {
     this.router.get(`/webhooks/:event`, (req: Request, res: Response, next: NextFunction) => {
       void RouterUtils.handleRestServerAction(
         WebhookService.handleGetWebhook.bind(this),
+        ServerAction.WEBHOOKS,
+        req,
+        res,
+        next
+      );
+    });
+  }
+  buildGetAllWebhookRoute() {
+    this.router.get(`/webhooks`, (req: Request, res: Response, next: NextFunction) => {
+      void RouterUtils.handleRestServerAction(
+        WebhookService.handleGetWebhooks.bind(this),
         ServerAction.WEBHOOKS,
         req,
         res,

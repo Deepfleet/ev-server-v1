@@ -1,7 +1,9 @@
+import { ServerAction } from './Server';
+
 export enum EventTypes {
   UNKNOWN = 'Unknown',
-  BOOT = 'Boot',
+  BOOT = 'BootNotification',
   HEARTBEAT = 'Heartbeat',
-  CHARGING_STARTED = 'Started',
-  CHARGING_STOPPED = 'Stopped',
+  CHARGING_STARTED = 'StartTransaction',
+  CHARGING_STOPPED = 'StopTransaction',
 }

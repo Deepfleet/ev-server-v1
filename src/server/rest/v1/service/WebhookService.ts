@@ -40,4 +40,18 @@ export default class WebhookService {
     }
     next();
   }
+  public static async handleGetWebhooks(
+    action: ServerAction,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    let callbacks = await WebhookStorage.getWebhooks(req.tenant);
+    if (callbacks) {
+      res.json({ callbacks: callbacks, ...Constants.REST_RESPONSE_SUCCESS });
+    } else {
+      res.status(404).json({ message: 'Not found event' });
+    }
+    next();
+  }
 }
