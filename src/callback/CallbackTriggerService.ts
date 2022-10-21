@@ -5,9 +5,10 @@ import { EventTypes } from '../types/Events';
 import Logging from '../utils/Logging';
 export class CallbackTrigger {
   static readonly QUEUE_NAME = 'Callbacks';
+  static readonly JOB_NAME = 'CallBackJobs';
   private callbackQueue: Queue;
   constructor() {
-    this.callbackQueue = new Queue('Callbacks', {
+    this.callbackQueue = new Queue(CallbackTrigger.QUEUE_NAME, {
       connection: {
         host: 'localhost',
         port: 6379,
@@ -27,6 +28,10 @@ export class CallbackTrigger {
       triggeredTime: new Date(),
     };
     Logging.logConsoleDebug('Created a callback event record');
-    await this.callbackQueue.add('CallBackJobs', callBackEvent, {});
+    await this.callbackQueue.add(CallbackTrigger.JOB_NAME, callBackEvent, {
+      delay: 5000,
+      removeOnComplete: true,
+      removeOnFail: 500,
+    });
   }
 }
