@@ -54,4 +54,19 @@ export default class WebhookService {
     }
     next();
   }
+  public static async handleDeleteWebhooks(
+    action: ServerAction,
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    const event = req.params.event as EventTypes;
+    let deleteResponse = await WebhookStorage.deleteWebhook(req.tenant, event);
+    if (deleteResponse) {
+      res.json({ ...Constants.REST_RESPONSE_SUCCESS });
+    } else {
+      res.status(404).json({ message: 'Not found event' });
+    }
+    next();
+  }
 }

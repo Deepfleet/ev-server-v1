@@ -63,13 +63,14 @@ export default class WebhookStorage {
     const startTime = Logging.traceDatabaseRequestStart();
     DatabaseUtils.checkTenantObject(tenant);
 
-    const callbackMDB = await global.database
+    const deleteResult = await global.database
       .getCollection<any>(tenant.id, 'callbacks')
       .deleteOne({ eventType: event });
 
     await Logging.traceDatabaseRequestEnd(tenant, MODULE_NAME, 'getWebhooks', startTime, {
       tenant: tenant,
     });
+    return deleteResult.deletedCount === 1;
   }
 
   public static async saveWebhookResult(

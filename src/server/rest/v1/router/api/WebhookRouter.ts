@@ -12,6 +12,7 @@ export default class WebhookRouter {
     this.buildGetWebhookRoute();
     this.buildCreateWebhookRoute();
     this.buildGetAllWebhookRoute();
+    this.buildDeleteWebhookRoute();
     return this.router;
   }
   buildCreateWebhookRoute() {
@@ -40,6 +41,17 @@ export default class WebhookRouter {
     this.router.get(`/webhooks`, (req: Request, res: Response, next: NextFunction) => {
       void RouterUtils.handleRestServerAction(
         WebhookService.handleGetWebhooks.bind(this),
+        ServerAction.WEBHOOKS,
+        req,
+        res,
+        next
+      );
+    });
+  }
+  buildDeleteWebhookRoute() {
+    this.router.delete(`/webhooks/:event`, (req: Request, res: Response, next: NextFunction) => {
+      void RouterUtils.handleRestServerAction(
+        WebhookService.handleDeleteWebhooks.bind(this),
         ServerAction.WEBHOOKS,
         req,
         res,
