@@ -36,10 +36,7 @@ export class CallbackHandler {
       Logging.logConsoleDebug(`Callback is defined ? ${callBackDef !== null}`);
       if (callBackDef) {
         let callBackUrl = callBackDef.url;
-        let msgData = [];
-        msgData.push({ CPO: tenant.name });
-        msgData.push({ Event: type });
-        msgData.push({ ...data });
+        let msgData = { CPO: tenant.name, Event: type, ...data };
         let response = await axios.post(callBackUrl, msgData);
         Logging.logConsoleDebug(
           `Executed with code ${response.statusText} and data ${response.data}`
