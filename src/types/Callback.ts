@@ -8,7 +8,7 @@ export interface Callback {
 export interface CallbackEvent {
   tenantId: string;
   type: EventTypes;
-  data?: Record<string, any>[];
+  data?: any;
   triggeredTime: Date;
 }
 

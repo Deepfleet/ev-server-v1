@@ -1,10 +1,14 @@
 import axios from 'axios';
 import { Worker, Job } from 'bullmq';
+import TransactionService from '../server/rest/v1/service/TransactionService';
 import WebhookService from '../server/rest/v1/service/WebhookService';
 import TenantStorage from '../storage/mongodb/TenantStorage';
+import TransactionStorage from '../storage/mongodb/TransactionStorage';
 import WebhookStorage from '../storage/mongodb/WebhookStorage';
 import { Callback, CallbackEvent } from '../types/Callback';
+import { EventTypes } from '../types/Events';
 import Tenant from '../types/Tenant';
+import Transaction from '../types/Transaction';
 import Logging from '../utils/Logging';
 import { CallbackTrigger } from './CallbackTriggerService';
 export class CallbackHandler {
@@ -30,16 +34,28 @@ export class CallbackHandler {
       Logging.logConsoleDebug(`No tenant details found for id ${tenantId}`);
     }
     if (tenant) {
-      Logging.logConsoleDebug(`Fetching webhook def for ${tenant.name} and Event ${type}`);
-      Logging.logConsoleDebug(typeof type);
+      // Logging.logConsoleDebug(`Fetching webhook def for ${tenant.name} and Event ${type}`);
       let callBackDef: Callback = await WebhookStorage.getWebhook(tenant, type);
-      Logging.logConsoleDebug(`Callback is defined ? ${callBackDef !== null}`);
+      // Logging.logConsoleDebug(`Callback is defined ? ${callBackDef !== null}`);
+
       if (callBackDef) {
         let callBackUrl = callBackDef.url;
         let msgData = { CPO: tenant.name, Event: type, ...data };
+        if (type === EventTypes.CHARGING_STOPPED) {
+          try {
+            let txn: Transaction = await TransactionStorage.getTransaction(
+              tenant,
+              data.transactionId
+            );
+            msgData.connectorId = txn.connectorId;
+          } catch (err) {
+            Logging.logConsoleDebug(err);
+          }
+        }
         let response = await axios.post(callBackUrl, msgData);
         Logging.logConsoleDebug(
-          `Executed with code ${response.statusText} and data ${response.data}`
+          `Executed callback for ${type} on tenant ${tenant.id} on url ${callBackUrl} 
+          with code ${response.statusText} and data ${response.data}`
         );
         let status = response.status === 200 ? 'Success' : 'Failure';
         let message =

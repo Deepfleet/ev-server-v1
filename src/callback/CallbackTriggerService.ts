@@ -16,11 +16,7 @@ export class CallbackTrigger {
     });
   }
 
-  public async submitCallBack(
-    tenantId: string,
-    eventType: EventTypes,
-    data: Record<string, any>[]
-  ) {
+  public async submitCallBack(tenantId: string, eventType: EventTypes, data: any) {
     let callBackEvent: CallbackEvent = {
       tenantId: tenantId,
       type: eventType,
