@@ -484,7 +484,7 @@ export default class OCPIUtilsService {
         inactivityStatus: transaction.currentInactivityStatus,
         userID: transaction.userID
       };
-      NotificationHelper.notifyStopTransaction(tenant, chargingStation, transaction, user);
+      NotificationHelper.notifyStopTransaction(tenant, transaction, chargingStation, user);
     }
     await TransactionStorage.saveTransaction(tenant, transaction);
     await OCPPUtils.updateChargingStationConnectorRuntimeDataWithTransaction(tenant, chargingStation, transaction, true);
@@ -522,7 +522,7 @@ export default class OCPIUtilsService {
         module: MODULE_NAME, method: 'processEmspCdr', action,
         errorCode: HTTPError.GENERAL_ERROR,
         message: 'Charging Station does not exist',
-        detailedMessages: { transaction, cdr },
+        detailedMessages: { transactionData: LoggingHelper.shrinkTransactionProperties(transaction), cdr },
         ocpiError: OCPIStatusCode.CODE_2003_UNKNOWN_LOCATION_ERROR
       });
     }

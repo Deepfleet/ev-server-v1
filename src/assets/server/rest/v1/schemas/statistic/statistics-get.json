@@ -31,6 +31,24 @@
     },
     "SiteID": {
       "$ref": "common#/definitions/ids"
+    },
+    "WithAuth": {
+      "$ref": "common#/definitions/withAuth",
+      "default": false
+    },
+    "DataScope": {
+      "type": "string",
+      "enum": [
+        "year",
+        "month",
+        "date",
+        "hour",
+        "dayOfMonth",
+        "dayOfWeek",
+        "dayOfYear",
+        "sum"
+      ],
+      "sanitize": "mongo"
     }
   }
 }

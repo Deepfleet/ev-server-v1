@@ -3,11 +3,9 @@ import { DispatchFundsTaskConfig } from '../../types/TaskConfig';
 import LockingHelper from '../../locking/LockingHelper';
 import LockingManager from '../../locking/LockingManager';
 import Logging from '../../utils/Logging';
-import NotificationHandler from '../../notification/NotificationHandler';
 import { ServerAction } from '../../types/Server';
 import Tenant from '../../types/Tenant';
 import TenantSchedulerTask from '../TenantSchedulerTask';
-import Utils from '../../utils/Utils';
 
 export default class DispatchCollectedFundsTask extends TenantSchedulerTask {
   public async processTenant(tenant: Tenant, taskConfig: DispatchFundsTaskConfig): Promise<void> {
@@ -21,7 +19,7 @@ export default class DispatchCollectedFundsTask extends TenantSchedulerTask {
           const actionResults = await billingImpl.dispatchCollectedFunds(taskConfig);
           if (actionResults.inError > 0) {
             // TODO - send a notification to the ADMINS
-            // void NotificationHandler.sendBillingPeriodicOperationFailed(
+            // NotificationHandler.sendBillingPeriodicOperationFailed(
             //   tenant,
             //   {
             //     nbrInvoicesInError: actionResults.inError,
@@ -29,6 +27,9 @@ export default class DispatchCollectedFundsTask extends TenantSchedulerTask {
             //     evseDashboardBillingURL: Utils.buildEvseBillingSettingsURL(tenant.subdomain)
             //   }
             // );
+            // }).catch((error) => {
+            //   Logging.logPromiseError(error, tenant?.id);
+            // });
           }
         }
       } catch (error) {

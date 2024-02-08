@@ -286,6 +286,7 @@ export enum ServerAction {
   CHARGING_STATION_REGISTERED = 'ChargingStationRegistered',
   END_OF_CHARGE = 'EndOfCharge',
   OPTIMAL_CHARGE_REACHED = 'OptimalChargeReached',
+  SESSION_STARTED = 'SessionStarted',
   END_OF_SESSION = 'EndOfSession',
   REQUEST_PASSWORD = 'RequestPassword',
   USER_ACCOUNT_STATUS_CHANGED = 'UserAccountStatusChanged',
@@ -417,7 +418,7 @@ export enum ServerAction {
   USER_CREATE = 'UserCreate',
   USER_DELETE = 'UserDelete',
   USER_UPDATE = 'UserUpdate',
-  USER_UPDATE_MOBILE_TOKEN = 'UpdateUserMobileToken',
+  USER_UPDATE_MOBILE_DATA = 'UpdateUserMobileData',
   USERS = 'Users',
   USER_SITES = 'UserSites',
   USERS_IN_ERROR = 'UsersInError',
@@ -426,6 +427,7 @@ export enum ServerAction {
   TAG = 'Tag',
   TAG_BY_VISUAL_ID= 'TagByVisualID',
   USER_DEFAULT_TAG_CAR = 'UserDefaultTagCar',
+  USER_SESSION_CONTEXT = 'UserSessionContext',
   TAG_CREATE = 'TagCreate',
   TAG_UPDATE = 'TagUpdate',
   TAG_UPDATE_BY_VISUAL_ID = 'TagUpdateByVisualID',
@@ -493,7 +495,9 @@ export enum ServerAction {
   HTTP_RESPONSE = 'HttpResponse',
   HTTP_ERROR = 'HttpError',
 
-  EXPORT_TO_CSV = 'ExportToCSV'
+  EXPORT_TO_CSV = 'ExportToCSV',
+  SHIELD ='Shield',
+  RATE_LIMITER = 'RateLimiter'
 }
 
 // RESTful API
@@ -573,8 +577,10 @@ export enum RESTServerRoute {
   REST_USERS = 'users',
   REST_USER = 'users/:id',
   REST_USER_DEFAULT_TAG_CAR = 'users/:id/default-car-tag',
+  REST_USER_SESSION_CONTEXT = 'users/:id/session-context',
   REST_USER_SITES = 'users/:id/sites',
   REST_USER_UPDATE_MOBILE_TOKEN = 'users/:id/mobile-token',
+  REST_USER_UPDATE_MOBILE_DATA = 'users/:id/mobile-data',
   REST_USER_IMAGE = 'users/:id/image',
   REST_USERS_IN_ERROR = 'users/status/in-error',
   REST_USERS_IMPORT = 'users/action/import',
@@ -611,6 +617,7 @@ export enum RESTServerRoute {
   REST_TENANT = 'tenants/:id',
   REST_TENANT_DATA = 'tenants/:id/data',
   REST_TENANT_LOGO = 'tenants/logo',
+  REST_TENANT_EMAIL_LOGO = 'tenants/email-logo',
 
   REST_COMPANIES = 'companies',
   REST_COMPANY = 'companies/:id',
@@ -700,6 +707,7 @@ export enum RESTServerRoute {
 
   REST_BILLING_SETTING = 'billing-setting', // GET and PUT
   REST_BILLING_CHECK = 'billing/check',
+  REST_BILLING_USER_SYNCHRONIZE = 'billing/users/:id/synchronize',
   REST_BILLING_CLEAR_TEST_DATA = 'billing/clearTestData',
 
   REST_BILLING_TAXES = 'billing/taxes',
@@ -721,7 +729,7 @@ export enum RESTServerRoute {
   REST_BILLING_TRANSFER = 'billing/transfers/:id',
   REST_BILLING_TRANSFER_FINALIZE = 'billing/transfers/:id/finalize',
   REST_BILLING_TRANSFER_SEND = 'billing/transfers/:id/send',
-  REST_BILLING_DOWNLOAD_TRANSFER = 'tranfers/:transferID/download',
+  REST_BILLING_TRANSFER_DOWNLOAD_INVOICE = 'billing/transfers/:id/invoice/download',
 
   // PRICING URLs for CRUD operations
   REST_PRICING_DEFINITIONS = 'pricing-definitions',

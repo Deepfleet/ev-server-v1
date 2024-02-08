@@ -27,6 +27,7 @@ export default class BillingRouter {
     // this.buildRouteBillingCreatePaymentMethod(); - // No use case so far
     // this.buildRouteBillingUpdatePaymentMethod(); - // No use case so far
     this.buildRouteBillingDeletePaymentMethod();
+    this.buildRouteForceSynchronizeUser();
     this.buildRouteBillingPaymentMethodSetup();
     this.buildRouteBillingPaymentMethodAttach();
     this.buildRouteBillingPaymentMethodDetach();
@@ -96,6 +97,13 @@ export default class BillingRouter {
     });
   }
 
+  private buildRouteForceSynchronizeUser(): void {
+    this.router.patch(`/${RESTServerRoute.REST_BILLING_USER_SYNCHRONIZE}`, (req: Request, res: Response, next: NextFunction) => {
+      req.body.id = req.params.id;
+      void RouterUtils.handleRestServerAction(BillingService.handleForceSynchronizeUser.bind(this), ServerAction.BILLING_FORCE_SYNCHRONIZE_USER, req, res, next);
+    });
+  }
+
   private buildRouteBillingPaymentMethodSetup(): void {
     this.router.post(`/${RESTServerRoute.REST_BILLING_PAYMENT_METHOD_SETUP}`, (req: Request, res: Response, next: NextFunction) => {
       // STRIPE prerequisite - ask for a setup intent first!
@@ -146,9 +154,9 @@ export default class BillingRouter {
   }
 
   private buildRouteBillingTransferDownload(): void {
-    this.router.get(`/${RESTServerRoute.REST_BILLING_DOWNLOAD_TRANSFER}`, (req: Request, res: Response, next: NextFunction) => {
-      req.query.ID = req.params.transferID;
-      void RouterUtils.handleRestServerAction(BillingService.handleDownloadTransfer.bind(this), ServerAction.BILLING_DOWNLOAD_TRANSFER, req, res, next);
+    this.router.get(`/${RESTServerRoute.REST_BILLING_TRANSFER_DOWNLOAD_INVOICE}`, (req: Request, res: Response, next: NextFunction) => {
+      req.query.ID = req.params.id;
+      void RouterUtils.handleRestServerAction(BillingService.handleTransferInvoiceDownload.bind(this), ServerAction.BILLING_DOWNLOAD_TRANSFER, req, res, next);
     });
   }
 

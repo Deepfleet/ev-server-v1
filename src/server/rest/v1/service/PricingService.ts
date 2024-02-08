@@ -108,6 +108,8 @@ export default class PricingService {
       Action.CREATE, Entity.PRICING_DEFINITION, MODULE_NAME, 'handleCreatePricingDefinition');
     // Filter
     const filteredRequest = PricingValidatorRest.getInstance().validatePricingDefinitionCreate(req.body);
+    // Check Pricing Definition
+    UtilsService.checkIfPricingDefinitionValid(filteredRequest, req);
     // Get dynamic auth
     await AuthorizationService.checkAndGetPricingDefinitionAuthorizations(
       req.tenant, req.user, {}, Action.CREATE, filteredRequest);
@@ -145,6 +147,8 @@ export default class PricingService {
       Action.UPDATE, Entity.PRICING_DEFINITION, MODULE_NAME, 'handleUpdatePricingDefinition');
     // Filter
     const filteredRequest = PricingValidatorRest.getInstance().validatePricingDefinitionUpdate(req.body);
+    // Check Pricing Definition
+    UtilsService.checkIfPricingDefinitionValid(filteredRequest, req);
     // Check and Get Pricing
     let pricingDefinition = await UtilsService.checkAndGetPricingDefinitionAuthorization(
       req.tenant, req.user, filteredRequest.id, Action.UPDATE, action, filteredRequest);
@@ -225,7 +229,7 @@ export default class PricingService {
         siteID = siteArea.siteID;
         break;
       case PricingEntity.CHARGING_STATION:
-        chargingStation = await UtilsService.checkAndGetChargingStationAuthorization(req.tenant, req.user, entityID, Action.READ, action);
+        chargingStation = await UtilsService.checkAndGetChargingStationAuthorization(req.tenant, req.user, entityID, Action.READ, action, null, { includeDeleted: true });
         siteID = chargingStation.siteID;
         break;
       default:

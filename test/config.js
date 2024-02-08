@@ -203,7 +203,7 @@ const config = convict({
     },
     uri: {
       doc: 'connection string URI',
-      default: null
+      default: ''
     },
     host: {
       doc: 'host name',
@@ -320,7 +320,12 @@ const config = convict({
       doc: 'Limit buffer ac',
       format: Number,
       default: ''
-    }
+    },
+    prioritizationParametersActive: {
+      doc: 'Use prioritization parameters',
+      format: Boolean,
+      default: ''
+    },
   },
   assetConnectors: {
     ioThink: {

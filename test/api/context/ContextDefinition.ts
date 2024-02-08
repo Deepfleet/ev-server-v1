@@ -37,7 +37,7 @@ export default class ContextDefinition {
     TENANT_BILLING: 'utbilling', // Only billing and pricing component is active
     TENANT_BILLING_PLATFORM: 'utbillingplatform', // Only billing, pricing and billingplatform component is active
     TENANT_ASSET: 'utasset', // Only asset component is active
-    TENANT_CAR: 'utcar', // Only car component is active
+    TENANT_CAR: 'utcar', // Only car and organization components are active
     TENANT_SMART_CHARGING: 'utsmartcharging' // Organization and Smart Charging components are active
   };
 
@@ -185,6 +185,7 @@ export default class ContextDefinition {
             stickyLimitation: true,
             limitBufferDC: 20,
             limitBufferAC: 10,
+            prioritizationParametersActive: true,
           }
         }
       },
@@ -342,6 +343,7 @@ export default class ContextDefinition {
     subdomain: ContextDefinition.TENANT_CONTEXTS.TENANT_CAR,
     componentSettings: {
       car: {},
+      organization: {}
     }
   },
   {
@@ -363,6 +365,7 @@ export default class ContextDefinition {
             stickyLimitation: true,
             limitBufferDC: 20,
             limitBufferAC: 10,
+            prioritizationParametersActive: true,
           }
         }
       },

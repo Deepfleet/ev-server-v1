@@ -447,7 +447,7 @@ export default class CpoOCPIClient extends OCPIClient {
         action: ServerAction.OCPI_CPO_PUSH_CDRS,
         message: `${Utils.buildConnectorInfo(transaction.connectorId, transaction.id)} OCPI CDR has been sent successfully`,
         module: MODULE_NAME, method: 'postCdr',
-        detailedMessages: { response: response.data, transaction }
+        detailedMessages: { response: response.data, transactionData: LoggingHelper.shrinkTransactionProperties(transaction) }
       });
       return true;
     }
@@ -457,7 +457,7 @@ export default class CpoOCPIClient extends OCPIClient {
       action: ServerAction.OCPI_CPO_PUSH_CDRS,
       message: `${Utils.buildConnectorInfo(transaction.connectorId, transaction.id)} OCPI CDR has no consumption and will be be ignored`,
       module: MODULE_NAME, method: 'postCdr',
-      detailedMessages: { transaction }
+      detailedMessages: { transactionData: LoggingHelper.shrinkTransactionProperties(transaction) }
     });
     return false;
   }
@@ -745,13 +745,15 @@ export default class CpoOCPIClient extends OCPIClient {
                 }
                 if (result.failure > 0) {
                   // Send notification to admins
-                  void NotificationHandler.sendOCPIPatchChargingStationsStatusesError(
+                  NotificationHandler.sendOCPIPatchChargingStationsStatusesError(
                     this.tenant,
                     {
                       location: location.name,
                       evseDashboardURL: Utils.buildEvseURL(this.tenant.subdomain),
                     }
-                  );
+                  ).catch((error) => {
+                    Logging.logPromiseError(error, this.tenant?.id);
+                  });
                 }
               }
             },

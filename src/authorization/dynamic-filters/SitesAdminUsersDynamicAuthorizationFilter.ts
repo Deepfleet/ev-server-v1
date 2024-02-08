@@ -53,7 +53,6 @@ export default class SitesAdminUsersDynamicAuthorizationFilter extends DynamicAu
         }
       }
     }
-    
     if (!Utils.isEmptyArray(tagIDs)) {
       // Force the filter
       authorizationFilters.filters.ownUserTags = tagIDs;

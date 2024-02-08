@@ -308,6 +308,12 @@
         "poolSize": {
           "type": "integer"
         },
+        "minPoolSize": {
+          "type": "integer"
+        },
+        "maxPoolSize": {
+          "type": "integer"
+        },
         "debug": {
           "type": "boolean"
         },
@@ -317,8 +323,7 @@
       },
       "required": [
         "implementation",
-        "uri",
-        "poolSize"
+        "uri"
       ]
     },
     "OCPIService": {
@@ -508,6 +513,9 @@
         "disableBackup": {
           "type": "boolean"
         },
+        "troubleshootingMode": {
+          "type": "boolean"
+        },
         "smtp": {
           "type": "object",
           "properties": {
@@ -580,9 +588,7 @@
         }
       },
       "required": [
-        "disableBackup",
-        "smtp",
-        "smtpBackup"
+        "smtp"
       ]
     },
     "Authorization": {
@@ -650,6 +656,31 @@
         "active",
         "nbrTasksInParallel"
       ]
+    },
+    "Shield": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": "boolean"
+        },
+        "rateLimiters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "numberOfPoints": {
+                "type": "number"
+              },
+              "numberOfSeconds": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
     },
     "Scheduler": {
       "type": "object",
@@ -725,6 +756,20 @@
       },
       "required": [
         "logLevel"
+      ]
+    },
+    "Cache": {
+      "type": "object",
+      "properties": {
+        "ttlSeconds": {
+          "type": "number"
+        },
+        "debug": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ttlSeconds"
       ]
     }
   }

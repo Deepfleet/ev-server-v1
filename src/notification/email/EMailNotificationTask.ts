@@ -14,7 +14,6 @@ import LoggingHelper from '../../utils/LoggingHelper';
 import NotificationTask from '../NotificationTask';
 import { ServerAction } from '../../types/Server';
 import Tenant from '../../types/Tenant';
-import TenantStorage from '../../storage/mongodb/TenantStorage';
 import User from '../../types/User';
 import Utils from '../../utils/Utils';
 import mjmlBuilder from './EmailMjmlBuilder';
@@ -25,7 +24,6 @@ const MODULE_NAME = 'EMailNotificationTask';
 export default class EMailNotificationTask implements NotificationTask {
   private emailConfig: EmailConfiguration = Configuration.getEmailConfig();
   private smtpMainClientInstance: SMTPClient;
-  private smtpBackupClientInstance: SMTPClient;
 
   public constructor() {
     // Connect to the SMTP servers
@@ -37,16 +35,6 @@ export default class EMailNotificationTask implements NotificationTask {
         port: this.emailConfig.smtp.port,
         tls: this.emailConfig.smtp.requireTLS,
         ssl: this.emailConfig.smtp.secure
-      });
-    }
-    if (!this.emailConfig.disableBackup && !Utils.isUndefined(this.emailConfig.smtpBackup)) {
-      this.smtpBackupClientInstance = new SMTPClient({
-        user: this.emailConfig.smtpBackup.user,
-        password: this.emailConfig.smtpBackup.password,
-        host: this.emailConfig.smtpBackup.host,
-        port: this.emailConfig.smtpBackup.port,
-        tls: this.emailConfig.smtpBackup.requireTLS,
-        ssl: this.emailConfig.smtpBackup.secure
       });
     }
   }
@@ -80,10 +68,9 @@ export default class EMailNotificationTask implements NotificationTask {
   }
 
   public async sendEndOfSignedSession(data: EndOfSignedSessionNotification, user: User, tenant: Tenant, severity: NotificationSeverity): Promise<NotificationResult> {
-    // TBC - This one is confusing and inconsistent - Users are getting data in German only!
-    return Promise.resolve(null);
-    // data.buttonUrl = data.evseDashboardURL;
-    // return await this.prepareAndSendEmail('end-of-signed-session', data, user, tenant, severity);
+    data.buttonUrl = data.evseDashboardChargingStationURL;
+    const optionalComponents = [await EmailComponentManager.getComponent(EmailComponent.MJML_EICHRECHT_TABLE)];
+    return await this.prepareAndSendEmail('end-of-signed-session', data, user, tenant, severity, optionalComponents);
   }
 
   public async sendChargingStationStatusError(data: ChargingStationStatusErrorNotification, user: User, tenant: Tenant, severity: NotificationSeverity): Promise<NotificationResult> {
@@ -240,7 +227,7 @@ export default class EMailNotificationTask implements NotificationTask {
     return await this.prepareAndSendEmail('user-create-password', data, user, tenant, severity);
   }
 
-  private async sendEmail(email: EmailNotificationMessage, data: any, tenant: Tenant, user: User, severity: NotificationSeverity, useSmtpClientBackup = false): Promise<void> {
+  private async sendEmail(email: EmailNotificationMessage, data: any, tenant: Tenant, user: User, severity: NotificationSeverity): Promise<void> {
     // Email configuration sanity checks
     if (!this.smtpMainClientInstance) {
       // No suitable main SMTP server configuration found to send the email
@@ -257,25 +244,9 @@ export default class EMailNotificationTask implements NotificationTask {
       });
       return;
     }
-    if (useSmtpClientBackup && !this.smtpBackupClientInstance) {
-      // No suitable backup SMTP server configuration found or activated to send the email
-      await Logging.logError({
-        tenantID: tenant.id,
-        siteID: data?.siteID,
-        siteAreaID: data?.siteAreaID,
-        companyID: data?.companyID,
-        chargingStationID: data?.chargeBoxID,
-        action: ServerAction.EMAIL_NOTIFICATION,
-        module: MODULE_NAME, method: 'sendEmail',
-        message: 'No suitable backup SMTP server configuration found or activated to send email after an error on the main SMTP server',
-        actionOnUser: user
-      });
-      return;
-    }
     // Create the message
     const messageToSend = new Message({
-      from: !this.emailConfig.disableBackup && !Utils.isUndefined(this.emailConfig.smtpBackup) && useSmtpClientBackup ?
-        this.emailConfig.smtpBackup.from : this.emailConfig.smtp.from,
+      from: this.emailConfig.smtp.from,
       to: email.to,
       cc: email.cc,
       bcc: email.bccNeeded && email.bcc ? email.bcc : '',
@@ -296,11 +267,14 @@ export default class EMailNotificationTask implements NotificationTask {
           content: email.html // Only log the email content when running automated tests
         }
       });
-      return ;
+      if (!this.emailConfig.troubleshootingMode) {
+        // Do not send emails when in dev mode or while running automated tests
+        return ;
+      }
     }
     try {
       // Get the SMTP client
-      const smtpClient = this.getSMTPClient(useSmtpClientBackup);
+      const smtpClient = this.getSMTPClient();
       // Send the message
       const messageSent: Message = await smtpClient.sendAsync(messageToSend);
       // Email sent successfully
@@ -339,29 +313,6 @@ export default class EMailNotificationTask implements NotificationTask {
           error: error.stack,
         }
       });
-      // Second try
-      let smtpFailed = true;
-      if (error instanceof SMTPError) {
-        const err: SMTPError = error;
-        switch (err.smtp) {
-          case 421:
-          case 432:
-          case 450:
-          case 451:
-          case 452:
-          case 454:
-          case 455:
-          case 510:
-          case 511:
-          case 550:
-            smtpFailed = false;
-            break;
-        }
-      }
-      // Use email backup?
-      if (smtpFailed && !useSmtpClientBackup) {
-        await this.sendEmail(email, data, tenant, user, severity, true);
-      }
     }
   }
 
@@ -386,10 +337,8 @@ export default class EMailNotificationTask implements NotificationTask {
       subject: `e-Mobility - ${tenant.name} - ${title}`,
       html: html
     };
-    // We may have a fallback - Not used anymore
-    const useSmtpClientFallback = false;
     // Send the email
-    await this.sendEmail(emailContent, context, tenant, recipient, severity, useSmtpClientFallback);
+    await this.sendEmail(emailContent, context, tenant, recipient, severity);
     return emailContent;
   }
 
@@ -413,10 +362,10 @@ export default class EMailNotificationTask implements NotificationTask {
           message: `No email is provided for User for '${templateName}'`
         });
       }
-      // ----------------------------------------------------------------------------------------------------------
-      //  ACHTUNG - to not alter the original sourceData object (the caller nay need to reuse the initial values)
-      // ----------------------------------------------------------------------------------------------------------
-      const context: Record<string, unknown> = await this.populateNotificationContext(tenant, recipient, sourceData);
+      // Enrich the sourceData with constant values
+      this.enrichSourceData(tenant, sourceData);
+      // Build the context with recipient data
+      const context: Record<string, unknown> = this.populateNotificationContext(tenant, recipient, sourceData);
       // Send the email
       emailContent = await this.sendSmartEmail(templateName, context, recipient, tenant, severity, optionalComponents);
       return {
@@ -440,35 +389,33 @@ export default class EMailNotificationTask implements NotificationTask {
     }
   }
 
-  private async populateNotificationContext(tenant: Tenant, recipient: User, sourceData: any): Promise<any> {
+  private enrichSourceData(tenant: Tenant, sourceData: any): void {
+    // Branding Information
+    sourceData.openEmobilityWebSiteURL = BrandingConstants.OPEN_EMOBILITY_WEBSITE_URL;
+    // Tenant information
+    if (tenant.id === Constants.DEFAULT_TENANT_ID) {
+      sourceData.tenantName = 'Open e-Mobility'; // TBC - Not sure what to show in emails in that case
+    } else {
+      sourceData.tenantName = tenant.name;
+    }
+    // Tenant logo URL
+    sourceData.tenantLogoURL = Utils.buildRestServerTenantEmailLogoURL(tenant.id);
+    if (this.emailConfig.troubleshootingMode && sourceData.tenantLogoURL.startsWith('http://localhost')) {
+      // Dev and test only - for security reasons te browser blocks content from localhost in emails!
+      sourceData.tenantLogoURL = BrandingConstants.OPEN_EMOBILITY_WEBSITE_LOGO_URL;
+    }
+  }
+
+  private populateNotificationContext(tenant: Tenant, recipient: User, sourceData: any): any {
     return {
-      ...sourceData,
-      // Tenant
-      tenantName: (tenant.id === Constants.DEFAULT_TENANT_ID) ? Constants.DEFAULT_TENANT_ID : tenant.name,
+      ...sourceData, // Do not alter the original sourceData object (the caller nay need to reuse the initial values)
       // Recipient
       recipientName: recipient.firstName || recipient.name,
       recipientEmail: recipient.email,
-      // Tenant LOGO
-      tenantLogoURL: await this.getTenantLogo(tenant),
-      // Branding
-      openEMobilityPoweredByLogo: BrandingConstants.OPEN_EMOBILITY_POWERED_BY,
-      openEmobilityWebSiteURL: BrandingConstants.OPEN_EMOBILITY_WEBSITE_URL
     };
   }
 
-  private async getTenantLogo(tenant: Tenant): Promise<string> {
-    if (tenant.id === Constants.DEFAULT_TENANT_ID) {
-      return BrandingConstants.TENANT_DEFAULT_LOGO_CONTENT;
-    } else if (!tenant.logo) {
-      tenant.logo = (await TenantStorage.getTenantLogo(tenant))?.logo;
-    }
-    return tenant.logo || BrandingConstants.TENANT_DEFAULT_LOGO_CONTENT;
-  }
-
-  private getSMTPClient(useSmtpClientBackup: boolean): SMTPClient {
-    if (useSmtpClientBackup) {
-      return this.smtpBackupClientInstance;
-    }
+  private getSMTPClient(): SMTPClient {
     return this.smtpMainClientInstance;
   }
 }

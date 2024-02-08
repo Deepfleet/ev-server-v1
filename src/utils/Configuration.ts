@@ -1,6 +1,7 @@
 import AsyncTaskConfiguration from '../types/configuration/AsyncTaskConfiguration';
 import AuthorizationConfiguration from '../types/configuration/AuthorizationConfiguration';
 import AxiosConfiguration from '../types/configuration/AxiosConfiguration';
+import CacheConfiguration from '../types/configuration/CacheConfiguration';
 import CentralSystemConfiguration from '../types/configuration/CentralSystemConfiguration';
 import CentralSystemFrontEndConfiguration from '../types/configuration/CentralSystemFrontEndConfiguration';
 import CentralSystemRestServiceConfiguration from '../types/configuration/CentralSystemRestServiceConfiguration';
@@ -8,6 +9,7 @@ import CentralSystemServerConfiguration from '../types/configuration/CentralSyst
 import ChargingStationConfiguration from '../types/configuration/ChargingStationConfiguration';
 import { Configuration as ConfigurationData } from '../types/configuration/Configuration';
 import ConfigurationValidatorStorage from '../storage/validator/ConfigurationValidatorStorage';
+import ShieldConfiguration from '../types/configuration/RateLimiterConfiguration';
 import Constants from './Constants';
 import CryptoConfiguration from '../types/configuration/CryptoConfiguration';
 import EVDatabaseConfiguration from '../types/configuration/EVDatabaseConfiguration';
@@ -43,6 +45,13 @@ export default class Configuration {
     const crypto = Configuration.getConfig().Crypto;
     if (!Configuration.isUndefined('Crypto', crypto)) {
       return crypto;
+    }
+  }
+
+  public static getShieldConfig(): ShieldConfiguration {
+    const shield = Configuration.getConfig().Shield;
+    if (!Configuration.isUndefined('Shield', shield)) {
+      return shield;
     }
   }
 
@@ -185,9 +194,6 @@ export default class Configuration {
   public static getEmailConfig(): EmailConfiguration {
     const email = Configuration.getConfig().Email;
     if (!Configuration.isUndefined('Email', email)) {
-      if (Configuration.isUndefined('Email.disableBackup', email.disableBackup)) {
-        email.disableBackup = false;
-      }
       return email;
     }
   }
@@ -285,19 +291,24 @@ export default class Configuration {
     return trace;
   }
 
+  public static getCacheConfig(): CacheConfiguration {
+    const cache = Configuration.getConfig().Cache;
+    if (!Configuration.isUndefined('Cache', cache)) {
+      return cache;
+    }
+  }
+
   private static getConfig(): ConfigurationData {
     if (!Configuration.config) {
-      let configuration: ConfigurationData;
-      // K8s
-      if (fs.existsSync('/config/config.json')) {
-        configuration = JSON.parse(
-          fs.readFileSync('/config/config.json', 'utf8')) as ConfigurationData;
-      // AWS
+      let configurationPath: string;
+      if (process.env.SERVER_ROLE) {
+        configurationPath = `${global.appRoot}/assets/config_` + process.env.SERVER_ROLE + '.json'; // Dev environment only
+      } else if (fs.existsSync('/config/config.json')) {
+        configurationPath = '/config/config.json'; // K8s Environment
       } else {
-        configuration = JSON.parse(
-          fs.readFileSync(`${global.appRoot}/assets/config.json`, 'utf8')) as ConfigurationData;
+        configurationPath = `${global.appRoot}/assets/config.json`; // AWS ECS environment only
       }
-      // Validate
+      const configuration = JSON.parse(fs.readFileSync(configurationPath, 'utf8')) as ConfigurationData;
       Configuration.config = ConfigurationValidatorStorage.getInstance().validateConfigurationSave(configuration);
     }
     return Configuration.config;
